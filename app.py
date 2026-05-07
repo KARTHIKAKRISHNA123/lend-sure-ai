@@ -20,7 +20,6 @@ import pandas as pd
 import pickle
 from pathlib import Path
 
-# ── MUST be first Streamlit call ─────────────────────────────────────────────
 st.set_page_config(
     page_title="LendSure AI",
     page_icon="🏦",
@@ -28,192 +27,159 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ─────────────────────────────────────────────────────────────────────────────
-# CSS  — self-contained, no split divs
-# ─────────────────────────────────────────────────────────────────────────────
+# ── Minimal navy-blue accent on top of HF default theme ──────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Serif:wght@400;600&display=swap');
-
 :root {
-  --bl9: #004182; --bl7: #0a66c2; --bl4: #378fe9;
-  --bl0: #e8f1fb; --bl1: #dce6f1;
-  --grn: #057642;  --red: #b24020;
-  --bg:  #f3f2ee;  --srf: #ffffff; --bdr: #d6d0c8;
-  --t1:  #191919;  --t2:  #595959; --t3: #888888;
-  --r: 8px;
+  --navy: #1B3A6B;
+  --navy-mid: #2563A8;
+  --navy-light: #EBF2FF;
+  --green: #166534;
+  --green-bg: #F0FDF4;
+  --red: #991B1B;
+  --red-bg: #FEF2F2;
+  --amber: #92400E;
 }
 
-html, body, [class*="css"], .stApp {
-  font-family: 'IBM Plex Sans', sans-serif !important;
-  background: var(--bg) !important;
+/* Header banner */
+.ls-header {
+  background: linear-gradient(120deg, #1B3A6B 0%, #2563A8 60%, #3B82F6 100%);
+  border-radius: 10px;
+  padding: 28px 32px;
+  margin-bottom: 20px;
 }
-.main .block-container {
-  max-width: 1100px;
-  padding: 1.2rem 1.4rem 3rem;
-}
-
-/* Sidebar */
-[data-testid="stSidebar"] {
-  background: var(--srf) !important;
-  border-right: 1px solid var(--bdr) !important;
-}
-[data-testid="stSidebar"] .stRadio label {
-  font-size: .85rem !important;
-  color: var(--t1) !important;
-}
-
-/* Header */
-.header-band {
-  background: linear-gradient(135deg, #004182 0%, #0a66c2 55%, #378fe9 100%);
-  border-radius: 8px;
-  padding: 26px 32px;
-  margin-bottom: 16px;
-}
-.header-band h1 {
+.ls-header h1 {
   color: #fff !important;
-  font-family: 'IBM Plex Serif', serif !important;
   font-size: 1.9rem !important;
-  font-weight: 600 !important;
-  margin: 0 0 4px !important;
+  font-weight: 700 !important;
+  margin: 0 0 6px !important;
+  letter-spacing: -.3px;
 }
-.header-band p {
-  color: rgba(255,255,255,.84) !important;
-  font-size: .87rem;
+.ls-header p {
+  color: rgba(255,255,255,.85) !important;
+  font-size: .88rem;
   margin: 0;
 }
 
-/* Section headings (self-contained) */
-.sec-head {
-  font-size: .68rem;
+/* Section divider label */
+.ls-section {
+  font-size: .72rem;
   font-weight: 700;
-  letter-spacing: 1.1px;
+  letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--t3);
-  border-bottom: 2px solid var(--bl1);
+  color: var(--navy-mid);
+  border-bottom: 2px solid var(--navy-light);
   padding-bottom: 6px;
-  margin: 0 0 14px;
+  margin-bottom: 14px;
+  margin-top: 4px;
 }
 
-/* Result panels */
+/* Result boxes — fully self-contained */
 .res-approved {
-  background: #ebf5f0;
-  border: 1.5px solid #057642;
-  border-radius: 8px;
-  padding: 20px;
+  background: var(--green-bg);
+  border: 2px solid #16A34A;
+  border-radius: 10px;
+  padding: 24px 16px;
   text-align: center;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 .res-rejected {
-  background: #fbede8;
-  border: 1.5px solid #b24020;
-  border-radius: 8px;
-  padding: 20px;
+  background: var(--red-bg);
+  border: 2px solid #DC2626;
+  border-radius: 10px;
+  padding: 24px 16px;
   text-align: center;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 .res-empty {
-  background: var(--srf);
-  border: 1px solid var(--bdr);
-  border-radius: 8px;
-  padding: 36px 20px;
+  border: 2px dashed #CBD5E1;
+  border-radius: 10px;
+  padding: 36px 16px;
   text-align: center;
-  margin-bottom: 12px;
-  color: #aaa;
+  margin-bottom: 16px;
+  color: #94A3B8;
 }
-.res-icon  { font-size: 2.3rem; line-height: 1.1; }
-.res-title { font-size: 1.2rem; font-weight: 700; margin: 6px 0 3px; }
-.res-sub   { font-size: .81rem; color: var(--t2); }
+.res-icon  { font-size: 2.5rem; line-height: 1; margin-bottom: 8px; }
+.res-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; }
+.res-sub   { font-size: .83rem; opacity: .8; }
 
-/* Scorecard container */
-.scorecard-box {
-  background: var(--srf);
-  border: 1px solid var(--bdr);
-  border-radius: 8px;
-  padding: 18px 20px;
-  margin-bottom: 12px;
+/* Score row */
+.score-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: .8rem;
+  margin-bottom: 2px;
 }
+.score-label { font-weight: 600; }
+.score-value { color: #64748B; }
 
-/* Insight card */
-.insight-card {
-  background: var(--srf);
-  border: 1px solid var(--bdr);
-  border-radius: 8px;
-  padding: 18px 20px;
-  margin-bottom: 14px;
-}
-
-/* Pills */
+/* Pill */
 .pill {
   display: inline-block;
-  background: var(--bl0);
-  color: var(--bl9);
+  background: var(--navy-light);
+  color: var(--navy);
   border-radius: 20px;
   padding: 3px 11px;
-  font-size: .74rem;
+  font-size: .75rem;
   font-weight: 600;
   margin: 2px 3px 4px 0;
 }
 .pill-model {
   display: inline-block;
-  background: var(--bl7);
+  background: var(--navy);
   color: #fff;
   border-radius: 20px;
-  padding: 3px 12px;
-  font-size: .74rem;
+  padding: 4px 14px;
+  font-size: .76rem;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
-/* Button */
-.stButton > button {
-  background: var(--bl7) !important;
-  color: #fff !important;
-  border: none !important;
-  border-radius: 24px !important;
-  font-weight: 600 !important;
-  font-size: .88rem !important;
-  padding: 9px 20px !important;
-  width: 100%;
-  transition: background .18s !important;
+/* Insight row */
+.insight-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 14px;
+  align-items: flex-start;
 }
-.stButton > button:hover {
-  background: var(--bl9) !important;
-}
-
-/* Inputs */
-.stSelectbox > label,
-.stSlider   > label,
-.stNumberInput > label {
-  font-size: .79rem !important;
-  font-weight: 600 !important;
-  color: var(--t2) !important;
-}
-
-/* Progress */
-.stProgress > div > div {
-  background: var(--bl7) !important;
-}
-
-/* Expander */
-.streamlit-expanderHeader {
-  font-weight: 600 !important;
-  font-size: .84rem !important;
-  color: var(--bl7) !important;
-}
+.insight-ico { font-size: 1.3rem; flex-shrink: 0; }
+.insight-ttl { font-weight: 600; font-size: .87rem; }
+.insight-desc { font-size: .79rem; color: #64748B; margin-top: 2px; }
 
 /* Footer */
-.footer-bar {
+.ls-footer {
   text-align: center;
-  font-size: .73rem;
-  color: var(--t3);
-  border-top: 1px solid var(--bdr);
-  padding-top: 14px;
-  margin-top: 20px;
+  font-size: .74rem;
+  color: #94A3B8;
+  border-top: 1px solid #E2E8F0;
+  padding-top: 16px;
+  margin-top: 24px;
 }
-.footer-bar a { color: var(--bl7); text-decoration: none; }
+.ls-footer a { color: var(--navy-mid); text-decoration: none; }
 
-/* Hide Streamlit chrome */
+/* Nav radio — make text visible */
+[data-testid="stSidebar"] .stRadio > label {
+  font-weight: 600;
+  font-size: .85rem;
+}
+
+/* Progress bar navy */
+.stProgress > div > div { background: var(--navy-mid) !important; }
+
+/* Button navy */
+.stButton > button {
+  background: var(--navy) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  font-size: .9rem !important;
+  padding: 10px 20px !important;
+  width: 100%;
+  transition: background .15s !important;
+}
+.stButton > button:hover { background: var(--navy-mid) !important; }
+
 #MainMenu, footer, header { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
@@ -225,7 +191,6 @@ OHE_COLS = [
     "Employment_Status", "Marital_Status", "Loan_Purpose",
     "Property_Area", "Gender", "Employer_Category",
 ]
-
 EMPLOYMENT_OPTS = ["Salaried", "Self-employed", "Contract", "Unemployed"]
 MARITAL_OPTS    = ["Married", "Single"]
 PURPOSE_OPTS    = ["Personal", "Car", "Business", "Home", "Education"]
@@ -236,12 +201,12 @@ EDUCATION_OPTS  = ["Graduate", "Not Graduate"]
 
 MODEL_OPTIONS = {
     "⭐ Logistic Regression (Best)": "model_lr.pkl",
-    "K-Nearest Neighbours":          "model_knn.pkl",
+    "K-Nearest Neighbours (KNN)":    "model_knn.pkl",
     "Naive Bayes (Best Precision)":  "model_nb.pkl",
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# LOADERS  — cached
+# LOADERS
 # ─────────────────────────────────────────────────────────────────────────────
 @st.cache_resource(show_spinner=False)
 def load_scaler():
@@ -259,11 +224,10 @@ def load_model(pkl_name: str):
     return pickle.load(open(p, "rb")) if p.exists() else None
 
 # ─────────────────────────────────────────────────────────────────────────────
-# PREPROCESSING  — mirrors notebook cells 46-85
+# PREPROCESSING  (mirrors notebook cells 46-85 exactly)
 # ─────────────────────────────────────────────────────────────────────────────
 def preprocess(raw: dict, scaler, encoder) -> np.ndarray:
     edu_enc = 1 if raw["Education_Level"] == "Not Graduate" else 0
-
     num_part = {
         "Applicant_Income":   raw["Applicant_Income"],
         "Coapplicant_Income": raw["Coapplicant_Income"],
@@ -278,26 +242,15 @@ def preprocess(raw: dict, scaler, encoder) -> np.ndarray:
         "DTI_Ratio_sq":       raw["DTI_Ratio"] ** 2,
         "Credit_Score_sq":    raw["Credit_Score"] ** 2,
     }
-
     cat_df = pd.DataFrame([{c: raw[c] for c in OHE_COLS}])
-
     if encoder is not None:
         ohe_arr = encoder.transform(cat_df)
-        ohe_df  = pd.DataFrame(
-            ohe_arr,
-            columns=encoder.get_feature_names_out(OHE_COLS)
-        )
+        ohe_df  = pd.DataFrame(ohe_arr, columns=encoder.get_feature_names_out(OHE_COLS))
     else:
         ohe_df = pd.get_dummies(cat_df, drop_first=True)
-
     num_df  = pd.DataFrame([num_part])
-    full_df = pd.concat(
-        [num_df.reset_index(drop=True), ohe_df.reset_index(drop=True)],
-        axis=1
-    )
-
+    full_df = pd.concat([num_df.reset_index(drop=True), ohe_df.reset_index(drop=True)], axis=1)
     return scaler.transform(full_df) if scaler is not None else full_df.values
-
 
 def cibil_band(score: int):
     if score >= 750: return "Excellent", "🟢"
@@ -314,65 +267,48 @@ def fmt_inr(v: float) -> str:
 # SIDEBAR
 # ─────────────────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown(
-        "<div style='padding:8px 0 16px'>"
-        "<div style='font-size:1.2rem;font-weight:700;color:#0a66c2'>🏦 LendSure AI</div>"
-        "<div style='font-size:.74rem;color:#888;margin-top:2px'>Loan Intelligence Platform</div>"
-        "</div>",
-        unsafe_allow_html=True,
-    )
+    st.markdown("### 🏦 LendSure AI")
+    st.caption("Loan Intelligence Platform")
+    st.divider()
 
     page = st.radio(
         "Navigate",
         ["🏠  Predict", "📊  Insights", "🤖  Models", "ℹ️  About"],
-        label_visibility="visible",
     )
+    st.divider()
 
-    st.markdown("---")
     st.markdown("**Select Model**")
-    sel_label = st.radio(
-        "Model",
-        list(MODEL_OPTIONS.keys()),
-        label_visibility="collapsed",
-    )
-    sel_pkl = MODEL_OPTIONS[sel_label]
-
-    st.markdown("---")
+    sel_label = st.radio("Model", list(MODEL_OPTIONS.keys()), label_visibility="collapsed")
+    sel_pkl   = MODEL_OPTIONS[sel_label]
     short_name = sel_label.split("(")[0].strip()
-    st.markdown(
-        f"<div style='font-size:.74rem;color:#888;line-height:1.9'>"
-        f"<b style='color:#444'>Active Model</b><br>"
-        f"<span style='color:#0a66c2;font-weight:600'>{short_name}</span><br><br>"
-        f"<b style='color:#444'>Dataset</b><br>1,000 records · 19 features<br><br>"
-        f"<b style='color:#444'>Models</b><br>LR · KNN · Naive Bayes<br><br>"
-        f"<b style='color:#444'>Status</b><br>"
-        f"<span style='color:#057642;font-weight:600'>● Active</span>"
-        f"</div>",
-        unsafe_allow_html=True,
-    )
+
+    st.divider()
+    st.markdown(f"""
+**Active:** {short_name}  
+**Dataset:** 1,000 records · 19 features  
+**Models:** LR · KNN · Naive Bayes  
+**Status:** 🟢 Running
+""")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# HEADER  — always shown
+# HEADER
 # ─────────────────────────────────────────────────────────────────────────────
 st.markdown(
-    "<div class='header-band'>"
+    "<div class='ls-header'>"
     "<h1>🏦 LendSure AI</h1>"
-    "<p>ML-powered loan approval · Logistic Regression · KNN · Naive Bayes · Transparent · Fast</p>"
+    "<p>ML-powered loan approval prediction · Logistic Regression · KNN · Naive Bayes · Transparent · Fast</p>"
     "</div>",
     unsafe_allow_html=True,
 )
 
-# Artifact loading
 scaler  = load_scaler()
 encoder = load_encoder()
 
-missing = []
-if scaler  is None: missing.append("`scaler.pkl`")
-if encoder is None: missing.append("`encoder.pkl`")
+missing = [n for n, o in [("scaler.pkl", scaler), ("encoder.pkl", encoder)] if o is None]
 if missing:
     st.warning(
-        f"⚠️ {' and '.join(missing)} not found — running in **demo mode**. "
-        "Upload all `.pkl` files to the Space for real predictions.",
+        f"⚠️ {' and '.join(missing)} not found — **demo mode**. "
+        "Upload all `.pkl` files for accurate predictions.",
         icon="🔔",
     )
 
@@ -383,37 +319,36 @@ if "Predict" in page:
 
     col_l, col_r = st.columns([1.05, 1], gap="large")
 
-    # ── LEFT ─────────────────────────────────────────────────────────────────
+    # ── LEFT: input form ──────────────────────────────────────────────────────
     with col_l:
 
-        # ── Card 1: Applicant Profile ────────────────────────────────────────
-        st.markdown("<div class='sec-head'>👤 Applicant Profile</div>", unsafe_allow_html=True)
+        # Section 1
+        st.markdown("<div class='ls-section'>👤 Applicant Profile</div>", unsafe_allow_html=True)
         c1, c2 = st.columns(2)
         with c1:
             age     = st.number_input("Age", 18, 75, 35)
             gender  = st.selectbox("Gender", GENDER_OPTS)
             marital = st.selectbox("Marital Status", MARITAL_OPTS)
         with c2:
-            dep     = st.number_input("Dependents", 0, 10, 1)
-            edu     = st.selectbox("Education Level", EDUCATION_OPTS)
-            emp_st  = st.selectbox("Employment Status", EMPLOYMENT_OPTS)
+            dep    = st.number_input("Dependents", 0, 10, 1)
+            edu    = st.selectbox("Education Level", EDUCATION_OPTS)
+            emp_st = st.selectbox("Employment Status", EMPLOYMENT_OPTS)
         emp_cat = st.selectbox("Employer Category", EMPLOYER_OPTS)
-        st.markdown("<hr style='margin:14px 0 4px;border:none;border-top:1px solid #e8e4de'>",
-                    unsafe_allow_html=True)
 
-        # ── Card 2: Financials ───────────────────────────────────────────────
-        st.markdown("<div class='sec-head' style='margin-top:10px'>💰 Financial Details</div>",
-                    unsafe_allow_html=True)
+        st.divider()
+
+        # Section 2
+        st.markdown("<div class='ls-section'>💰 Financial Details</div>", unsafe_allow_html=True)
         c3, c4 = st.columns(2)
         with c3:
             app_inc   = st.number_input("Applicant Income (₹/mo)", 0, 200_000, 8_000, 500)
             coapp_inc = st.number_input("Co-applicant Income (₹/mo)", 0, 100_000, 2_000, 500)
             savings   = st.number_input("Savings Balance (₹)", 0, 500_000, 15_000, 1_000)
         with c4:
-            cr_score  = st.slider("Credit Score", 300, 900, 680)
-            ex_loans  = st.number_input("Existing Loans (#)", 0, 10, 1)
-            dti       = st.slider("DTI Ratio", 0.0, 1.0, 0.35, 0.01,
-                                  help="Debt-to-Income ratio (0 = no debt, 1 = income = debt)")
+            cr_score = st.slider("Credit Score", 300, 900, 680)
+            ex_loans = st.number_input("Existing Loans (#)", 0, 10, 1)
+            dti      = st.slider("DTI Ratio", 0.0, 1.0, 0.35, 0.01,
+                                 help="Debt-to-Income ratio (0 = no debt)")
 
         band_lbl, band_ico = cibil_band(cr_score)
         st.markdown(
@@ -422,12 +357,11 @@ if "Predict" in page:
             f"<span class='pill'>Loans: {int(ex_loans)}</span>",
             unsafe_allow_html=True,
         )
-        st.markdown("<hr style='margin:14px 0 4px;border:none;border-top:1px solid #e8e4de'>",
-                    unsafe_allow_html=True)
 
-        # ── Card 3: Loan & Property ──────────────────────────────────────────
-        st.markdown("<div class='sec-head' style='margin-top:10px'>🏦 Loan & Property Details</div>",
-                    unsafe_allow_html=True)
+        st.divider()
+
+        # Section 3
+        st.markdown("<div class='ls-section'>🏦 Loan & Property Details</div>", unsafe_allow_html=True)
         c5, c6 = st.columns(2)
         with c5:
             loan_amt  = st.number_input("Loan Amount (₹)", 5_000, 1_000_000, 30_000, 1_000)
@@ -445,19 +379,16 @@ if "Predict" in page:
             f"<span class='pill'>Term: {int(loan_term)} mo</span>",
             unsafe_allow_html=True,
         )
-        st.markdown("<br>", unsafe_allow_html=True)
 
-        st.markdown(
-            f"<span class='pill-model'>Model: {short_name}</span>",
-            unsafe_allow_html=True,
-        )
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown(f"<span class='pill-model'>Model: {short_name}</span>",
+                    unsafe_allow_html=True)
         predict_btn = st.button("🔍 Predict Loan Eligibility", use_container_width=True)
 
-    # ── RIGHT ────────────────────────────────────────────────────────────────
+    # ── RIGHT: result + scorecard ─────────────────────────────────────────────
     with col_r:
 
-        # Result panel
-        st.markdown("<div class='sec-head'>📋 Prediction Result</div>", unsafe_allow_html=True)
+        st.markdown("<div class='ls-section'>📋 Prediction Result</div>", unsafe_allow_html=True)
 
         if predict_btn:
             raw = {
@@ -481,28 +412,21 @@ if "Predict" in page:
                 "Employer_Category":  emp_cat,
             }
             model = load_model(sel_pkl)
-
             if model is None:
-                st.error(
-                    f"**{sel_pkl}** not found in Space files. "
-                    "Upload the pkl files via the Files tab."
-                )
+                st.error(f"**{sel_pkl}** not found. Upload pkl files via the Files tab.")
             else:
                 try:
                     X        = preprocess(raw, scaler, encoder)
                     pred     = model.predict(X)[0]
                     approved = int(pred) == 1
-
-                    if hasattr(model, "predict_proba"):
-                        conf = float(max(model.predict_proba(X)[0])) * 100
-                    else:
-                        conf = 75.0
+                    conf = (float(max(model.predict_proba(X)[0])) * 100
+                            if hasattr(model, "predict_proba") else 75.0)
 
                     if approved:
                         st.markdown(
                             "<div class='res-approved'>"
                             "<div class='res-icon'>✅</div>"
-                            "<div class='res-title' style='color:#057642'>Loan Approved</div>"
+                            "<div class='res-title' style='color:#166534'>Loan Approved</div>"
                             "<div class='res-sub'>Application meets eligibility criteria</div>"
                             "</div>",
                             unsafe_allow_html=True,
@@ -511,7 +435,7 @@ if "Predict" in page:
                         st.markdown(
                             "<div class='res-rejected'>"
                             "<div class='res-icon'>❌</div>"
-                            "<div class='res-title' style='color:#b24020'>Loan Rejected</div>"
+                            "<div class='res-title' style='color:#991B1B'>Loan Rejected</div>"
                             "<div class='res-sub'>Application does not meet eligibility criteria</div>"
                             "</div>",
                             unsafe_allow_html=True,
@@ -526,17 +450,18 @@ if "Predict" in page:
         else:
             st.markdown(
                 "<div class='res-empty'>"
-                "<div style='font-size:2rem'>📝</div>"
-                "<div style='font-size:.85rem;margin-top:8px'>"
-                "Fill in applicant details on the left and click<br>"
-                "<strong style='color:#0a66c2'>Predict Loan Eligibility</strong>"
+                "<div class='res-icon'>📝</div>"
+                "<div style='font-size:.86rem;margin-top:8px'>"
+                "Fill in applicant details on the left<br>and click "
+                "<b style='color:#2563A8'>Predict Loan Eligibility</b>"
                 "</div></div>",
                 unsafe_allow_html=True,
             )
 
-        # ── Risk Scorecard — always visible ──────────────────────────────────
-        st.markdown("<div class='scorecard-box'>", unsafe_allow_html=True)
-        st.markdown("<div class='sec-head'>⚡ Live Risk Scorecard</div>", unsafe_allow_html=True)
+        st.divider()
+
+        # ── Live Risk Scorecard ───────────────────────────────────────────────
+        st.markdown("<div class='ls-section'>⚡ Live Risk Scorecard</div>", unsafe_allow_html=True)
 
         cr_pct   = int((cr_score - 300) / 600 * 100)
         inc_pct  = min(int(app_inc  / 200_000 * 100), 100)
@@ -552,20 +477,19 @@ if "Predict" in page:
             ("Collateral",     coll_pct, f"LTV {ltv}%"),
         ]:
             st.markdown(
-                f"<div style='display:flex;justify-content:space-between;"
-                f"font-size:.78rem;margin-bottom:1px'>"
-                f"<b>{label}</b><span style='color:#666'>{cap}</span></div>",
+                f"<div class='score-row'>"
+                f"<span class='score-label'>{label}</span>"
+                f"<span class='score-value'>{cap}</span>"
+                f"</div>",
                 unsafe_allow_html=True,
             )
             st.progress(pct)
 
-        st.markdown("</div>", unsafe_allow_html=True)
-
-        with st.expander("💡 Tips to improve loan eligibility"):
+        with st.expander("💡 Tips to improve eligibility"):
             st.markdown("""
 - **Credit Score ≥ 700** dramatically improves approval odds
 - **DTI Ratio < 0.40** — clear existing loans before applying
-- **Collateral Value > Loan Amount** reduces lender risk
+- **Collateral > Loan Amount** reduces lender risk
 - **Savings ≥ 3× EMI** signals financial stability
 - **Salaried + Government employer** scores highest
 - **Urban property area** has better approval rates
@@ -576,77 +500,70 @@ if "Predict" in page:
 # ─────────────────────────────────────────────────────────────────────────────
 elif "Insights" in page:
 
-    st.markdown("<div class='insight-card'>", unsafe_allow_html=True)
-    st.markdown("<div class='sec-head'>📊 Credit Score Reference</div>", unsafe_allow_html=True)
-    cibil_df = pd.DataFrame({
-        "Band":            ["Excellent (750–900)", "Good (700–749)", "Fair (650–699)", "Poor (300–649)"],
-        "Approval Rate %": [91, 72, 48, 18],
-        "Avg Interest %":  [8.5, 10.2, 12.5, 16.0],
-        "Risk Level":      ["Very Low", "Low", "Medium", "High"],
-    })
+    st.markdown("<div class='ls-section'>📊 Credit Score Reference</div>", unsafe_allow_html=True)
     st.dataframe(
-        cibil_df, use_container_width=True, hide_index=True,
+        pd.DataFrame({
+            "Band":            ["Excellent (750–900)", "Good (700–749)", "Fair (650–699)", "Poor (300–649)"],
+            "Approval Rate %": [91, 72, 48, 18],
+            "Avg Interest %":  [8.5, 10.2, 12.5, 16.0],
+            "Risk Level":      ["Very Low", "Low", "Medium", "High"],
+        }),
+        use_container_width=True, hide_index=True,
         column_config={
             "Approval Rate %": st.column_config.ProgressColumn(
                 "Approval Rate", min_value=0, max_value=100, format="%d%%"
             )
         },
     )
-    st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown("<div class='insight-card'>", unsafe_allow_html=True)
-    st.markdown("<div class='sec-head'>📈 Dataset Overview</div>", unsafe_allow_html=True)
+    st.divider()
+    st.markdown("<div class='ls-section'>📈 Dataset Overview</div>", unsafe_allow_html=True)
     m1, m2, m3, m4 = st.columns(4)
     m1.metric("Total Records", "1,000")
     m2.metric("Features", "19")
     m3.metric("Approved", "29.8%")
     m4.metric("Rejected", "65.2%")
-    st.caption(
-        "Dataset is class-imbalanced (majority = Rejected). "
-        "F1 Score and Precision are primary evaluation metrics."
-    )
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.caption("Class-imbalanced dataset — F1 Score and Precision are primary metrics, not just accuracy.")
 
-    st.markdown("<div class='insight-card'>", unsafe_allow_html=True)
-    st.markdown("<div class='sec-head'>🔑 Key Approval Factors (from EDA)</div>", unsafe_allow_html=True)
+    st.divider()
+    st.markdown("<div class='ls-section'>🔑 Key Approval Factors (from EDA)</div>", unsafe_allow_html=True)
     for ico, ttl, desc in [
-        ("🎯", "Credit Score",       "Strongest predictor. Score ≥ 700 significantly boosts approval odds."),
-        ("💰", "DTI Ratio",          "Debt-to-income ratio. Below 0.40 is strongly preferred by lenders."),
-        ("🏦", "Collateral Value",   "Higher collateral → lower lender risk → better approval probability."),
-        ("💼", "Employment Status",  "Salaried > Self-employed > Contract. Unemployed rarely approved."),
-        ("🏠", "Property Area",      "Urban > Semiurban > Rural in approval likelihood."),
-        ("💵", "Savings Balance",    "Higher savings indicate financial resilience and safety buffer."),
-        ("👨‍👩‍👧", "Dependents",         "More dependents reduce disposable income — moderate negative impact."),
+        ("🎯", "Credit Score",      "Strongest predictor. Score ≥ 700 significantly boosts approval."),
+        ("💰", "DTI Ratio",         "Debt-to-income ratio. Below 0.40 strongly preferred by lenders."),
+        ("🏦", "Collateral Value",  "Higher collateral → lower lender risk → better approval odds."),
+        ("💼", "Employment Status", "Salaried > Self-employed > Contract. Unemployed rarely approved."),
+        ("🏠", "Property Area",     "Urban > Semiurban > Rural in approval likelihood."),
+        ("💵", "Savings Balance",   "Higher savings signal financial resilience and repayment ability."),
+        ("👨‍👩‍👧", "Dependents",        "More dependents reduce disposable income — moderate negative impact."),
     ]:
         st.markdown(
-            f"<div style='display:flex;gap:12px;margin-bottom:12px;align-items:flex-start'>"
-            f"<div style='font-size:1.3rem'>{ico}</div>"
-            f"<div><div style='font-weight:600;font-size:.85rem'>{ttl}</div>"
-            f"<div style='font-size:.78rem;color:#666;margin-top:2px'>{desc}</div></div>"
+            f"<div class='insight-row'>"
+            f"<div class='insight-ico'>{ico}</div>"
+            f"<div><div class='insight-ttl'>{ttl}</div>"
+            f"<div class='insight-desc'>{desc}</div></div>"
             f"</div>",
             unsafe_allow_html=True,
         )
-    st.markdown("</div>", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PAGE: MODELS
 # ─────────────────────────────────────────────────────────────────────────────
 elif "Models" in page:
 
-    st.markdown("<div class='insight-card'>", unsafe_allow_html=True)
-    st.markdown("<div class='sec-head'>🤖 Model Comparison</div>", unsafe_allow_html=True)
-    st.caption("All models trained on the same pipeline: StandardScaler + OHE + LabelEncode + DTI² + Credit²")
-    mdf = pd.DataFrame({
-        "Model":    ["Logistic Regression ⭐", "K-Nearest Neighbours", "Naive Bayes"],
-        "File":     ["model_lr.pkl",           "model_knn.pkl",        "model_nb.pkl"],
-        "Strength": ["Balanced Accuracy + F1", "Pattern similarity",   "Highest Precision"],
-        "Best For": ["Default use case",       "Non-linear patterns",  "Minimising false approvals"],
-    })
-    st.dataframe(mdf, use_container_width=True, hide_index=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("<div class='ls-section'>🤖 Model Comparison</div>", unsafe_allow_html=True)
+    st.caption("All models share the same preprocessing pipeline: StandardScaler + OHE + LabelEncode + DTI² + Credit²")
+    st.dataframe(
+        pd.DataFrame({
+            "Model":    ["Logistic Regression ⭐", "K-Nearest Neighbours", "Naive Bayes"],
+            "File":     ["model_lr.pkl",            "model_knn.pkl",        "model_nb.pkl"],
+            "Strength": ["Best overall Accuracy + F1", "Pattern similarity",  "Highest Precision"],
+            "Best For": ["Default recommendation",    "Non-linear patterns", "Minimising false approvals"],
+        }),
+        use_container_width=True, hide_index=True,
+    )
 
-    st.markdown("<div class='insight-card'>", unsafe_allow_html=True)
-    st.markdown("<div class='sec-head'>🔧 Preprocessing Pipeline</div>", unsafe_allow_html=True)
+    st.divider()
+    st.markdown("<div class='ls-section'>🔧 Preprocessing Pipeline</div>", unsafe_allow_html=True)
     st.code(
         "Raw CSV  (1000 rows × 20 cols)\n"
         "  │\n"
@@ -663,10 +580,9 @@ elif "Models" in page:
         "  └─ StandardScaler → X_train_scaled\n",
         language="text",
     )
-    st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown("<div class='insight-card'>", unsafe_allow_html=True)
-    st.markdown("<div class='sec-head'>📦 Artifact Status</div>", unsafe_allow_html=True)
+    st.divider()
+    st.markdown("<div class='ls-section'>📦 Artifact Status</div>", unsafe_allow_html=True)
     for fname, desc in [
         ("model_lr.pkl",  "LogisticRegression()"),
         ("model_knn.pkl", "KNeighborsClassifier(n_neighbors=5)"),
@@ -674,49 +590,48 @@ elif "Models" in page:
         ("scaler.pkl",    "StandardScaler — fitted on X_train"),
         ("encoder.pkl",   "OneHotEncoder(drop='first', sparse_output=False)"),
     ]:
-        exists = Path(fname).exists()
         a, b, c = st.columns([2, 3, 1])
         a.code(fname)
         b.caption(desc)
-        c.markdown("✅ Loaded" if exists else "⚠️ Missing")
-    st.markdown("</div>", unsafe_allow_html=True)
+        c.markdown("✅ Loaded" if Path(fname).exists() else "⚠️ Missing")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PAGE: ABOUT
 # ─────────────────────────────────────────────────────────────────────────────
 elif "About" in page:
 
-    st.markdown("<div class='insight-card'>", unsafe_allow_html=True)
-    st.markdown("<div class='sec-head'>ℹ️ About LendSure AI</div>", unsafe_allow_html=True)
+    st.markdown("<div class='ls-section'>ℹ️ About LendSure AI</div>", unsafe_allow_html=True)
     st.markdown("""
-**LendSure AI** is a complete end-to-end ML loan approval prediction system built as part of
-the AIML practitioner portfolio at **Anna University Regional Campus, Tirunelveli**.
+**LendSure AI** is an end-to-end ML loan approval prediction system built as part of the
+AIML practitioner portfolio at **Anna University Regional Campus, Tirunelveli**.
 
-Three classifiers are trained on 1,000 real loan application records through a consistent
-preprocessing pipeline — then served via a transparent Streamlit UI with live risk scoring
-and real-time model switching.
+Three classifiers are trained on 1,000 real loan records through a full preprocessing pipeline —
+then served via a transparent Streamlit UI with live risk scoring and model switching.
 
 | Layer | Technology |
 |-------|------------|
 | UI | Streamlit |
-| ML Models | Scikit-learn (LR · KNN · Naive Bayes) |
+| ML Models | Scikit-learn — LR · KNN · Naive Bayes |
 | Preprocessing | StandardScaler + OneHotEncoder + LabelEncoder |
 | Feature Eng. | DTI² · Credit Score² |
 | Dataset | loan_approval_data.csv — 1,000 rows · 19 features |
 | Deployment | Hugging Face Spaces (Streamlit SDK) |
 | Version Control | Git LFS (pkl files) + GitHub |
+""")
 
-**Author:** Karthika Krishna M — CSE, Anna University Regional Campus, Tirunelveli  
+    st.divider()
+    st.markdown("**Author**")
+    st.markdown("""
+**Karthika Krishna M** — CSE, Anna University Regional Campus, Tirunelveli  
 🔗 [github.com/KARTHIKAKRISHNA123](https://github.com/KARTHIKAKRISHNA123) ·
-🤗 [KarthikaKrishna123](https://huggingface.co/KarthikaKrishna123)
+🤗 [KarthikaKrishna123 on Hugging Face](https://huggingface.co/KarthikaKrishna123)
     """)
-    st.markdown("</div>", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # FOOTER
 # ─────────────────────────────────────────────────────────────────────────────
 st.markdown(
-    "<div class='footer-bar'>"
+    "<div class='ls-footer'>"
     "LendSure AI · Built by <strong>Karthika Krishna M</strong> · "
     "<a href='https://github.com/KARTHIKAKRISHNA123' target='_blank'>GitHub</a> · "
     "Anna University Regional Campus, Tirunelveli &nbsp;|&nbsp;"
