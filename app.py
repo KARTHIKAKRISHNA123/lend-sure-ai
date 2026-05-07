@@ -159,7 +159,7 @@ def preprocess(raw:dict, scaler, encoder) -> np.ndarray:
     # LabelEncode Education_Level (Graduate=0, Not Graduate=1)
     edu_enc = 1 if raw["Education_Level"] == "Not Graduate" else 0
 
-    # Numerical block (order matches x_train.columns after Cell 80)
+    # Numerical features
     num = {
         "Applicant_Income":   raw["Applicant_Income"],
         "Coapplicant_Income": raw["Coapplicant_Income"],
@@ -171,10 +171,9 @@ def preprocess(raw:dict, scaler, encoder) -> np.ndarray:
         "Loan_Amount":        raw["Loan_Amount"],
         "Loan_Term":          raw["Loan_Term"],
         "Education_Level":    edu_enc,
-        # Feature engineering (Cell 80)
+        # Engineered features (Cell 80) — Credit_Score & DTI_Ratio originals dropped
         "DTI_Ratio_sq":       raw["DTI_Ratio"] ** 2,
         "Credit_Score_sq":    raw["Credit_Score"] ** 2,
-        # NOTE: Applicant_Income_log is COMMENTED OUT in notebook → NOT included
     }
 
     # OHE categorical block
@@ -188,6 +187,21 @@ def preprocess(raw:dict, scaler, encoder) -> np.ndarray:
     num_df  = pd.DataFrame([num])
     full_df = pd.concat([num_df.reset_index(drop=True),
                          ohe_df.reset_index(drop=True)], axis=1)
+
+    # ── CRITICAL: reindex to EXACT column order scaler was fitted on ──────────
+    # Verified order from scaler.feature_names_in_ (27 columns):
+    # [0-9]  numerics + Education_Level
+    # [10-24] OHE columns in encoder.get_feature_names_out() order
+    # [25-26] DTI_Ratio_sq, Credit_Score_sq
+    EXACT_COLS = (
+        ["Applicant_Income","Coapplicant_Income","Age","Dependents",
+         "Existing_Loans","Savings","Collateral_Value","Loan_Amount",
+         "Loan_Term","Education_Level"]
+        + list(encoder.get_feature_names_out(OHE_COLS))
+        + ["DTI_Ratio_sq","Credit_Score_sq"]
+    ) if encoder is not None else list(full_df.columns)
+
+    full_df = full_df.reindex(columns=EXACT_COLS, fill_value=0)
 
     if scaler is not None:
         return scaler.transform(full_df)
