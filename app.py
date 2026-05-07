@@ -33,7 +33,7 @@ def load_assets():
     lr = pickle.load(open('model_lr.pkl', 'rb'))
     knn = pickle.load(open('model_knn.pkl', 'rb'))
     scaler = pickle.load(open('scaler.pkl', 'rb'))
-    ohe = pickle.load(open('ohe.pkl', 'rb'))
+    ohe = pickle.load(open('encoder.pkl', 'rb'))
     return nb, lr, knn, scaler, ohe
 
 nb, lr, knn, scaler, ohe = load_assets()
