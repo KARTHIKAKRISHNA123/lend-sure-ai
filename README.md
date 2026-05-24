@@ -1,7 +1,7 @@
 <!-- Banner -->
 <div align="center">
 
-<h1>🏦 LendSure AI/h1>
+<h1>🏦 LendSure AI </h1>
 <h3><em>LendSure AI — ML-Powered Loan Approval Intelligence Platform</em></h3>
 
 <p>
